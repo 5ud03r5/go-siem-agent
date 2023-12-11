@@ -2,12 +2,16 @@ package utils
 
 import (
 	"compress/gzip"
-	"fmt"
 	"os"
 	"strings"
 )
 
 func CompressAndWriteToFile(lines []string, filename string) error {
+	// Add ".gz" extension if not present
+	if !strings.HasSuffix(filename, ".gz") {
+		filename += ".gz"
+	}
+
 	// Create a gzip writer
 	file, err := os.Create(filename)
 	if err != nil {
@@ -18,16 +22,13 @@ func CompressAndWriteToFile(lines []string, filename string) error {
 	gzipWriter := gzip.NewWriter(file)
 	defer gzipWriter.Close()
 
-	// Join the lines into a single string
-	content := strings.Join(lines, "\n")
-
-	// Write the compressed content to the gzip writer
-	_, err = gzipWriter.Write([]byte(content))
-	if err != nil {
-		return err
+	// Write each line to the gzip writer
+	for _, line := range lines {
+		_, err := gzipWriter.Write([]byte(line + "\n"))
+		if err != nil {
+			return err
+		}
 	}
-
-	fmt.Println("Content compressed and written to", filename)
 
 	return nil
 }

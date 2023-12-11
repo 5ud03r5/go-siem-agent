@@ -6,7 +6,6 @@ import (
 )
 
 func CreateDirectory(directoryPath string) error {
-	// Create the directory
 	err := os.Mkdir(directoryPath, 0755)
 	if err != nil {
 		return err

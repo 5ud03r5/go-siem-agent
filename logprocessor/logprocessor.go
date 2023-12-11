@@ -2,9 +2,9 @@ package logprocessor
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -31,9 +31,12 @@ func processLog(name string, filePath string, format string) {
 			panic(err)
 		}
 		position = returnedPosition
-		fmt.Printf("Processed %v lines for %v\n", lineCount, name)
-
-		fmt.Println(processedLines)
+		unixTimestamp := time.Now().Unix()
+		unixTimestampString := strconv.FormatInt(unixTimestamp, 10)
+		filename := "backlog/" + name + "_" + unixTimestampString + "_" + strconv.FormatInt(position, 10)
+		if lineCount > 0 {
+			utils.CompressAndWriteToFile(processedLines, filename)
+		}
 
 		duration := 1 * time.Second
 		time.Sleep(duration)

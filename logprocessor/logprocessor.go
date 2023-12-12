@@ -2,6 +2,7 @@ package logprocessor
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -14,18 +15,30 @@ import (
 func RunProcessors(config *[]utils.ConfigEntry, wg *sync.WaitGroup) {
     for _, entry := range *config {
         wg.Add(1)
-        go func(name string, filePath string, format string) {
+		directoryName := "backlog/" + entry.Name
+		utils.CreateDirectory(directoryName)
+        go func(name string, filePath string, format string, backlogSize int64) {
             defer wg.Done()
-            processLog(name, filePath, format)
-        }(entry.Name, entry.FilePath, entry.Format)
+            processLog(name, filePath, format, backlogSize)
+        }(entry.Name, entry.FilePath, entry.Format, entry.BacklogSize)
     }
 }
 
-func processLog(name string, filePath string, format string) {
+func processLog(name string, filePath string, format string, backlogSize int64) {
 	var position int64
 	position = 0
 
 	for {
+		directoryName := "backlog/" + name
+		size, err := utils.GetDirectorySize(directoryName)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if size > backlogSize {
+			fmt.Printf("%v: Directory size reached treshold of %v\n", directoryName, backlogSize)
+		}
 		returnedPosition, lineCount, processedLines, err := processNewLines(filePath, position)
 		if err != nil {
 			panic(err)
@@ -33,12 +46,12 @@ func processLog(name string, filePath string, format string) {
 		position = returnedPosition
 		unixTimestamp := time.Now().Unix()
 		unixTimestampString := strconv.FormatInt(unixTimestamp, 10)
-		filename := "backlog/" + name + "_" + unixTimestampString + "_" + strconv.FormatInt(position, 10)
+		filename := directoryName + "/" + name + "_" + unixTimestampString + "_" + strconv.FormatInt(position, 10)
 		if lineCount > 0 {
 			utils.CompressAndWriteToFile(processedLines, filename)
 		}
 
-		duration := 1 * time.Second
+		duration := 5 * time.Second
 		time.Sleep(duration)
 	}
 }

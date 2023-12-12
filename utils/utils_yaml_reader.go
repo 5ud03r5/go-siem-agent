@@ -11,6 +11,7 @@ type ConfigEntry struct {
 	Name string `yaml:"name"`
 	FilePath string `yaml:"file_path"`
 	Format string `yaml:"format"`
+	BacklogSize int64 `yaml:"backlog_size"`
 }
 
 func RetrieveParsedYaml(yamlFilePath string) []ConfigEntry {

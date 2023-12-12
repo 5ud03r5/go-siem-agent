@@ -1,3 +1,4 @@
 - name: example
   file_path: "example.log"
   format: syslog
+  backlog_size: 10000
